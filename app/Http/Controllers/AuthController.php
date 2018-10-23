@@ -1,9 +1,11 @@
 <?php
 
 namespace App\Http\Controllers;
-
+use App\Http\Requests\SignUpRequest;
 use Illuminate\Support\Facades\Auth;
 use App\Http\Controllers\Controller;
+use App\User;
+
 
 class AuthController extends Controller
 {
@@ -14,7 +16,7 @@ class AuthController extends Controller
      */
     public function __construct()
     {
-        $this->middleware('auth:api', ['except' => ['login']]);
+        $this->middleware('auth:api', ['except' => ['login','signup']]);
     }
 
     /**
@@ -32,6 +34,15 @@ class AuthController extends Controller
 
         return $this->respondWithToken($token);
     }
+
+    // signup function of users
+    public function signup(SignUpRequest $request)
+    {
+        User::create($request->all());
+        // Login user automatically
+        return $this->login($request);
+    }
+
 
     /**
      * Get the authenticated User.
