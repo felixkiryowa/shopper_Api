@@ -7,6 +7,8 @@ use Symfony\Component\HttpFoundation\Response;
 use Illuminate\Support\Facades\Mail;
 use App\Mail\RestPassword;
 use App\User;
+use DB;
+use Carbon\Carbon;
 
 class RequestPasswordResetController extends Controller
 {
@@ -40,6 +42,32 @@ class RequestPasswordResetController extends Controller
 
     // Hold sending Email logic
     public function sendEmail($email){
-        Mail::to($email)->send(new RestPassword);
+        $token = $this->createToken($email);
+        Mail::to($email)->send(new RestPassword($token));
     }
+
+    // Function to create a token
+    public function createToken($email){
+        $oldToken = DB::table('password_resets')->where('email',$email)->first();
+        if($oldToken) {
+            return $oldToken->token;
+        }
+        else{
+            $token = str_random(60);
+            $this->saveToken($token,$email);
+            return $token;
+        }
+       
+    }
+    // Function to save token in password resets table
+    public function saveToken($token, $email){
+        DB::table('password_resets')->insert(
+            [
+                'email' => $email,
+                'token' => $token,
+                'created_at'=> Carbon::now()
+            ]
+        );
+    }
+
 }
